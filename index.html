@@ -1448,10 +1448,10 @@
             saveAllData();
         }
 
-        // 修改：上下文读取数量增加到 12 条
+        // 修改：上下文读取数量增加到 25 条
         function getThreadContext(post) {
             const header = `[Main Post by ${post.author.name} (${post.author.id})]: "${post.content}"\n[Image Context]: ${post.imageDesc || "None"}`;
-            const history = post.comments.slice(-12).map(c => `[Comment by ${c.author.name} (${c.author.id})]: "${c.content}"`).join("\n");
+            const history = post.comments.slice(-25).map(c => `[Comment by ${c.author.name} (${c.author.id})]: "${c.content}"`).join("\n");
             return `${header}\n${history || "[No comments yet]"}`;
         }
         
