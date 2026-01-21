@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>HELIOS TERMINAL</title>
     
-    <!-- PWA 设置：强制全屏，隐藏地址栏 -->
+    <!-- PWA 设置 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="HELIOS">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#213063">
     
-    <!-- 动态 Manifest (Base64) 用于支持添加到桌面后全屏 -->
+    <!-- Manifest -->
     <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIkhFTElPUyBURVJNSU5BTCIsCiAgInNob3J0X25hbWUiOiAiSEVMSU9TIiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMyMTMwNjMiLAogICJ0aGVtZV9jb2xvciI6ICIjMjEzMDYzIiwKICAiaWNvbnMiOiBbCiAgICB7CiAgICAgICJzcmMiOiAiaHR0cHM6Ly9maWxlcy5jYXRib3gubW9lL2dxNWFvby5wbmciLAogICAgICAic2l6ZXMiOiAiMTkyeDE5MiIsCiAgICAgICJ0eXBlIjogImltYWdlL3BuZyIKICAgIH0KICBdCn0=">
 
     <style>
@@ -34,29 +34,26 @@
 
         * { box-sizing: border-box; }
         
-        /* === 核心修改：锁定全局滚动，防止地址栏弹出 === */
         html, body {
             height: 100%;
-            overflow: hidden; /* 禁止 body 滚动 */
+            overflow: hidden; 
             margin: 0; padding: 0;
             font-family: "Roboto", sans-serif;
             background-color: var(--bg-color);
             color: var(--text-body);
-            overscroll-behavior-y: none; /* 防止橡皮筋效果 */
+            overscroll-behavior-y: none;
         }
 
         .hidden { display: none !important; }
         input, textarea, select { font-family: inherit; outline: none;}
 
-        /* 让每个页面容器自己处理滚动 */
         .scrollable-page {
             height: 100%;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
-            padding-bottom: 80px; /* 底部留白给导航栏 */
+            padding-bottom: 80px; 
         }
 
-        /* 系统页面容器 */
         .system-page {
             height: 100%;
             background-color: var(--bg-color);
@@ -78,11 +75,10 @@
             flex-shrink: 0;
             z-index: 500;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            padding-top: env(safe-area-inset-top); /* 适配刘海屏 */
+            padding-top: env(safe-area-inset-top);
             height: calc(45px + env(safe-area-inset-top));
         }
         
-        /* 内容区域 */
         .sys-content-scroll {
             flex: 1;
             overflow-y: auto;
@@ -166,7 +162,7 @@
         .sys-btn-outline { background: transparent; border: 1px solid var(--nav-bg); color: var(--nav-bg); cursor: pointer; border-radius: 4px; }
         .sys-btn-danger { background: var(--danger); }
 
-        /* Role Card */
+        /* Role Card Edit */
         .role-card-edit {
             background: white; border-radius: 6px; margin-bottom: 12px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden; border-left: 4px solid var(--nav-bg);
@@ -175,11 +171,25 @@
             padding: 10px 15px; display: flex; align-items: center; justify-content: space-between;
             background: #f9f9f9; cursor: pointer; border-bottom: 1px solid #eee;
         }
-        .role-header-left { display: flex; align-items: center; gap: 10px; }
+        .role-header-left { display: flex; align-items: center; gap: 10px; flex: 1; }
         .role-edit-body { padding: 15px; display: none; background: #fff; }
         .role-edit-body.active { display: block; }
         .mini-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
         
+        /* === NEW: Role Toggle Button === */
+        .role-toggle-btn {
+            width: 24px; height: 24px; border-radius: 50%;
+            border: 2px solid var(--nav-bg); cursor: pointer;
+            margin-right: 10px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.7rem; font-weight: bold;
+            transition: all 0.2s;
+        }
+        .role-toggle-btn.active { background-color: var(--nav-bg); color: white; border-color: var(--nav-bg); }
+        .role-toggle-btn.inactive { background-color: white; color: var(--nav-bg); border-color: #ccc; }
+        .role-toggle-btn.inactive:after { content: "✕"; }
+        .role-toggle-btn.active:after { content: "✓"; }
+
         .add-btn-float {
             position: fixed; bottom: 30px; right: 20px; width: 50px; height: 50px;
             background: var(--nav-bg); color: white; border-radius: 50%; font-size: 1.5rem;
@@ -210,7 +220,7 @@
             background: var(--bg-color);
             display: flex;
             flex-direction: column;
-            overflow: hidden; /* 内部滚动 */
+            overflow: hidden; 
         }
         
         /* SNS Top Nav */
@@ -246,7 +256,7 @@
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             padding: 10px;
-            padding-bottom: 80px; /* Leave space for bottom bar */
+            padding-bottom: 80px; 
         }
 
         .post-wrapper { margin-bottom: 25px; position: relative; }
@@ -704,7 +714,13 @@
                 if (!u.worldBooks) u.worldBooks = [];
                 user = u;
             }
-            if(localStorage.getItem('helios_roles')) roles = JSON.parse(localStorage.getItem('helios_roles'));
+            if(localStorage.getItem('helios_roles')) {
+                roles = JSON.parse(localStorage.getItem('helios_roles'));
+                // 确保每个角色都有 isEnabled 属性，默认为 true
+                roles.forEach(r => {
+                    if (r.isEnabled === undefined) r.isEnabled = true;
+                });
+            }
             if(localStorage.getItem('helios_posts')) posts = JSON.parse(localStorage.getItem('helios_posts'));
             
             document.getElementById('api-url').value = config.url;
@@ -820,16 +836,20 @@
             closeUserEditModal();
         }
 
-        // --- Contacts Logic ---
+        // --- Contacts Logic (Modified with Toggle) ---
         function renderContactsPage() {
             const container = document.getElementById('contacts-list');
             container.innerHTML = "";
             roles.forEach((r, idx) => {
                 const div = document.createElement('div');
                 div.className = 'role-card-edit';
+                
+                const btnClass = (r.isEnabled !== false) ? 'role-toggle-btn active' : 'role-toggle-btn inactive';
+                
                 div.innerHTML = `
                     <div class="role-header" onclick="toggleRoleEdit(${idx})">
                         <div class="role-header-left">
+                            <div class="${btnClass}" onclick="toggleRoleEnabled(event, ${idx})"></div>
                             <img src="${r.avatar || ''}" class="mini-avatar" onerror="this.src=''">
                             <div>
                                 <div style="font-weight:bold; font-size:0.95rem;">${r.name}</div>
@@ -872,8 +892,15 @@
                 arrow.innerText = "▲";
             }
         }
+        function toggleRoleEnabled(e, idx) {
+            e.stopPropagation(); // Prevent opening edit body
+            if (roles[idx].isEnabled === undefined) roles[idx].isEnabled = true;
+            roles[idx].isEnabled = !roles[idx].isEnabled;
+            saveAllData();
+            renderContactsPage();
+        }
         function addNewRole() {
-            const newRole = { name: "新角色", id: "@new_role", avatar: "", persona: "请输入设定..." };
+            const newRole = { name: "新角色", id: "@new_role", avatar: "", persona: "请输入设定...", isEnabled: true };
             roles.push(newRole);
             saveAllData();
             renderContactsPage();
@@ -974,34 +1001,58 @@
         }
 
         async function generateMultiPosts() {
-            // 1. 如果没有角色，提示并退出
-            if(roles.length === 0) { alert("请先在通讯录添加角色"); return; }
+            // 1. 获取所有已启用的角色
+            const enabledRoles = roles.filter(r => r.isEnabled !== false);
+
+            if(enabledRoles.length === 0) { alert("请先在通讯录启用至少一个角色"); return; }
             
-            // 2. 显示加载动画
             document.getElementById('loading').classList.remove('hidden');
             
-            // --- 修改核心：只随机选 1 个人 ---
-            const randomAuthor = roles[Math.floor(Math.random() * roles.length)];
+            // 2. 随机选 1 个已启用的角色发帖
+            const randomAuthor = enabledRoles[Math.floor(Math.random() * enabledRoles.length)];
             
-            // 3. 执行生成任务（这个函数内部也是只发 1 次 API 请求，包含帖子+评论）
-            await generateAIPostWithChain(randomAuthor);
+            await generateAIPostWithChain(randomAuthor, enabledRoles);
             
-            // 4. 隐藏加载动画，回到顶部，保存
             document.getElementById('loading').classList.add('hidden');
             document.getElementById('feed-container').scrollTop = 0;
             saveAllData();
         }
 
-        // --- 核心优化：防截断/文本标记模式 (JSON REMOVED) ---
-        async function generateAIPostWithChain(authorRole) {
+        // --- 核心优化：防截断/智能选人模式 ---
+        async function generateAIPostWithChain(authorRole, allEnabledRoles) {
             const worldInfo = getWorldContext();
             const now = new Date();
             const timeString = `${now.getHours()}:${now.getMinutes().toString().padStart(2,'0')}`;
             const fullDate = getDetailedDate();
             
-            // 准备潜在评论者名单 (排除作者自己)
-            const potentialCommenters = roles.filter(r => r.id !== authorRole.id);
-            const commentersInfo = potentialCommenters.map(r => `${r.name} (${r.id}): ${r.persona}`).join("\n");
+            // === 智能选人算法 ===
+            // 1. 识别“好朋友” (Relationship): 扫描作者Persona里出现的其他角色名
+            let friends = [];
+            let strangers = [];
+
+            allEnabledRoles.forEach(r => {
+                if (r.id === authorRole.id) return; // 排除自己
+                if (authorRole.persona.includes(r.name)) {
+                    friends.push(r);
+                } else {
+                    strangers.push(r);
+                }
+            });
+
+            // 2. 随机打乱两组人
+            friends.sort(() => Math.random() - 0.5);
+            strangers.sort(() => Math.random() - 0.5);
+
+            // 3. 构建名单：优先填入朋友，剩下的位置给路人，总数控制在 4 人以内以节省 Token
+            let selectedCommenters = [...friends];
+            const remainingSlots = 4 - selectedCommenters.length;
+            if (remainingSlots > 0) {
+                selectedCommenters = selectedCommenters.concat(strangers.slice(0, remainingSlots));
+            } else {
+                selectedCommenters = selectedCommenters.slice(0, 4);
+            }
+
+            const commentersInfo = selectedCommenters.map(r => `${r.name} (${r.id}): ${r.persona}`).join("\n");
 
             const sysPrompt = `
             ${HUMAN_VIBE_PROMPT}
@@ -1014,6 +1065,7 @@
             Time: ${timeString}
             ${worldInfo}
             [POTENTIAL COMMENTERS]
+            (These are characters currently online. Friends/Related people are prioritized)
             ${commentersInfo}
 
             [TASK]
@@ -1040,9 +1092,9 @@
             ]);
             if(!contentRaw) return;
 
-            console.log("AI Output (Truncation Safe):", contentRaw);
+            console.log("AI Output:", contentRaw);
 
-            // --- 文本标记解析逻辑 (比 JSON 强壮得多) ---
+            // --- 文本标记解析逻辑 ---
             
             // 1. 提取 Post
             let postContent = "...";
@@ -1067,14 +1119,13 @@
                 if(!line) continue;
                 
                 // 格式应该是: "@id 内容"
-                // 我们尝试分离第一个空格前的 ID
                 const firstSpaceIndex = line.indexOf(' ');
                 if(firstSpaceIndex !== -1) {
                     const idStr = line.substring(0, firstSpaceIndex).trim();
                     const textStr = line.substring(firstSpaceIndex).trim();
                     
-                    // 匹配角色
-                    const commenter = roles.find(r => r.id === idStr || idStr.includes(r.id)); // 模糊匹配防止AI写错
+                    // 匹配角色 (在所有角色里匹配，防止AI幻觉)
+                    const commenter = roles.find(r => r.id === idStr || idStr.includes(r.id));
                     if(commenter) {
                         extractedComments.push({
                             commenter_id: commenter.id,
@@ -1135,7 +1186,43 @@
             const worldInfo = getWorldContext();
             const userInfo = `User: ${user.name} (${user.id}), Persona: ${user.persona}`;
             const threadCtx = getThreadContext(post);
-            const availableRoles = roles.map(r => `${r.name} (${r.id}): ${r.persona}`).join("\n");
+            
+            // === 智能选人逻辑 (Reply Mode) ===
+            const enabledRoles = roles.filter(r => r.isEnabled !== false);
+            
+            // 1. 找出已经在帖子里的角色 (保持连续性)
+            const existingParticipantIds = new Set(post.comments.map(c => c.author.id));
+            existingParticipantIds.add(post.author.id); // 作者必在
+
+            let activeRoles = enabledRoles.filter(r => existingParticipantIds.has(r.id));
+            
+            // 2. 如果人数不足 4 人，拉“关系户”或者“路人”
+            if (activeRoles.length < 4) {
+                const candidates = enabledRoles.filter(r => !existingParticipantIds.has(r.id));
+                
+                let friends = [];
+                let strangers = [];
+                
+                // 简单的关系判断：看名字是否在作者设定里出现
+                candidates.forEach(r => {
+                    if (post.author.persona.includes(r.name)) friends.push(r);
+                    else strangers.push(r);
+                });
+
+                friends.sort(() => Math.random() - 0.5);
+                strangers.sort(() => Math.random() - 0.5);
+
+                let slotsNeeded = 4 - activeRoles.length;
+                let pickFromFriends = friends.slice(0, slotsNeeded);
+                activeRoles = activeRoles.concat(pickFromFriends);
+                
+                slotsNeeded = 4 - activeRoles.length;
+                if (slotsNeeded > 0) {
+                    activeRoles = activeRoles.concat(strangers.slice(0, slotsNeeded));
+                }
+            }
+
+            const availableRolesStr = activeRoles.map(r => `${r.name} (${r.id}): ${r.persona}`).join("\n");
 
             const sysPrompt = `
             ${HUMAN_VIBE_PROMPT}
@@ -1148,7 +1235,8 @@
             [THREAD HISTORY]
             ${threadCtx}
             [AVAILABLE ACTORS]
-            ${availableRoles}
+            (Focus on characters already in thread or related to OP)
+            ${availableRolesStr}
             [TASK]
             Decide how many characters (randomly 1 to 3) will comment now.
             
@@ -1251,8 +1339,11 @@
 
             // 获取楼内已有的角色ID
             const inThreadIds = new Set(post.comments.map(c => c.author.id));
+            
+            // 只显示“已启用”的角色用于召唤
+            const enabledRoles = roles.filter(r => r.isEnabled !== false);
 
-            roles.forEach(r => {
+            enabledRoles.forEach(r => {
                 if(r.id === user.id || r.id === post.author.id) return;
                 const opt = document.createElement('option');
                 opt.value = r.id;
@@ -1438,7 +1529,7 @@
                             <span class="comment-count-badge">💬 ${post.comments.length}</span>
                         </div>
                         <div class="skew-btn" onclick="openDetail('${post.uid}')">
-                            <span>评论区</span>
+                            <span>查看评论</span>
                         </div>
                     </div>
                 `;
