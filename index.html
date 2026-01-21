@@ -2,18 +2,23 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>HELIOS TERMINAL</title>
+    
+    <!-- PWA 设置：强制全屏，隐藏地址栏 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="HELIOS">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#213063">
+    
+    <!-- 动态 Manifest (Base64) 用于支持添加到桌面后全屏 -->
+    <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIkhFTElPUyBURVJNSU5BTCIsCiAgInNob3J0X25hbWUiOiAiSEVMSU9TIiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMyMTMwNjMiLAogICJ0aGVtZV9jb2xvciI6ICIjMjEzMDYzIiwKICAiaWNvbnMiOiBbCiAgICB7CiAgICAgICJzcmMiOiAiaHR0cHM6Ly9maWxlcy5jYXRib3gubW9lL2dxNWFvby5wbmciLAogICAgICAic2l6ZXMiOiAiMTkyeDE5MiIsCiAgICAgICJ0eXBlIjogImltYWdlL3BuZyIKICAgIH0KICBdCn0=">
+
     <style>
         @import url("https://fontsapi.zeoseven.com/hn/main/result.css");
 
         :root {
-            /* 全局配色 */
             --bg-color: #e6ebf0;
             --nav-bg: #213063;
             --text-primary: #1A2B5E;
@@ -24,40 +29,42 @@
             --danger: #d63031;
             --edit: #e67e22;
             --post-btn-color: rgb(255, 202, 13);
-            
-            /* 外部系统专用 */
             --menu-item-height: 60px;
         }
 
         * { box-sizing: border-box; }
         
-        body {
+        /* === 核心修改：锁定全局滚动，防止地址栏弹出 === */
+        html, body {
+            height: 100%;
+            overflow: hidden; /* 禁止 body 滚动 */
+            margin: 0; padding: 0;
             font-family: "Roboto", sans-serif;
             background-color: var(--bg-color);
-            margin: 0;
-            padding: 0;
             color: var(--text-body);
-            overflow-x: hidden;
-            padding-bottom: 0; 
+            overscroll-behavior-y: none; /* 防止橡皮筋效果 */
         }
 
         .hidden { display: none !important; }
         input, textarea, select { font-family: inherit; outline: none;}
 
-        /* =========================================
-           PART 1: 外部系统 UI (一级/二级菜单)
-           ========================================= */
-
-        /* 通用容器 */
-        .system-page {
-            min-height: 100vh;
-            background-color: var(--bg-color);
-            position: relative;
-            padding-bottom: 40px;
-            padding-top: 45px;
+        /* 让每个页面容器自己处理滚动 */
+        .scrollable-page {
+            height: 100%;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 80px; /* 底部留白给导航栏 */
         }
 
-        /* 顶部导航栏 (终端) */
+        /* 系统页面容器 */
+        .system-page {
+            height: 100%;
+            background-color: var(--bg-color);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
         .sys-top-bar {
             height: 45px;
             background-color: var(--nav-bg);
@@ -68,18 +75,21 @@
             font-weight: bold;
             font-size: 1rem;
             letter-spacing: 2px;
-            position: fixed;
-            top: 0;
-            width: 100%;
+            flex-shrink: 0;
             z-index: 500;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            padding-top: env(safe-area-inset-top); /* 适配刘海屏 */
+            height: calc(45px + env(safe-area-inset-top));
         }
         
-        .sys-content {
-            margin-top: 0;
+        /* 内容区域 */
+        .sys-content-scroll {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 40px;
         }
 
-        /* 返回栏 (二级菜单用) */
         .sub-nav-bar {
             background-color: #fff;
             height: 40px;
@@ -89,174 +99,81 @@
             border-bottom: 1px solid #ddd;
             color: var(--nav-bg);
             font-weight: bold;
-            position: sticky;
-            top: 45px;
+            flex-shrink: 0;
             z-index: 499;
         }
         .back-arrow { cursor: pointer; padding: 5px 10px; font-size: 1.2rem; margin-right: 5px;}
 
-        /* --- 个人资料卡 (Level 1) --- */
+        /* User Card */
         .user-card-container {
-            position: relative;
-            width: 100%;
-            height: 160px;
-            overflow: hidden;
-            margin-bottom: 10px;
-            background: #000;
+            position: relative; width: 100%; height: 160px; overflow: hidden; margin-bottom: 10px; background: #000;
         }
-        /* 背景图层 */
         .uc-bg {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-image: url('https://files.catbox.moe/0o72zw.png');
-            background-size: cover;
-            background-position: center;
-            opacity: 0.65;
-            filter: blur(1px);
-            z-index: 1;
+            background-size: cover; background-position: center;
+            opacity: 0.65; filter: blur(1px); z-index: 1;
         }
-        /* 渐变遮罩 */
         .uc-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to bottom, rgba(33,48,99,0.2), rgba(33,48,99,0.7));
-            z-index: 2;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(33,48,99,0.2), rgba(33,48,99,0.7)); z-index: 2;
         }
-        /* 内容层 */
         .uc-content {
-            position: relative;
-            z-index: 3;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            padding: 20px;
-            gap: 15px;
+            position: relative; z-index: 3; height: 100%; display: flex; align-items: center; padding: 20px; gap: 15px;
         }
         .uc-avatar {
-            width: 70px; height: 70px;
-            border-radius: 50%;
-            border: 3px solid var(--white);
-            object-fit: cover;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            background: #ccc;
+            width: 70px; height: 70px; border-radius: 50%; border: 3px solid var(--white);
+            object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.3); background: #ccc;
         }
         .uc-info {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            color: white;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            flex: 1; display: flex; flex-direction: column; justify-content: center;
+            color: white; text-shadow: 0 1px 3px rgba(0,0,0,0.5);
         }
         .uc-name { font-size: 1.4rem; font-weight: bold; margin-bottom: 2px; }
         .uc-id { font-size: 0.85rem; opacity: 0.9; font-family: monospace; }
         .uc-persona-preview { font-size: 0.75rem; opacity: 0.7; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
-        
         .uc-edit-btn {
-            position: absolute;
-            right: 15px; top: 15px;
-            background: rgba(255,255,255,0.2);
-            border: 1px solid rgba(255,255,255,0.4);
-            color: white;
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            cursor: pointer;
-            z-index: 4;
-            backdrop-filter: blur(5px);
+            position: absolute; right: 15px; top: 15px;
+            background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4);
+            color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.75rem;
+            cursor: pointer; z-index: 4; backdrop-filter: blur(5px);
         }
 
-        /* --- 主菜单列表 (Level 1) --- */
-        .main-menu-list {
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
+        /* Menu */
+        .main-menu-list { padding: 10px; display: flex; flex-direction: column; gap: 10px; }
         .menu-item {
-            background: white;
-            height: var(--menu-item-height);
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            position: relative;
-            cursor: pointer;
-            overflow: hidden;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            background: white; height: var(--menu-item-height); border-radius: 4px; display: flex; align-items: center;
+            position: relative; cursor: pointer; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             transition: transform 0.1s;
         }
         .menu-item:active { transform: scale(0.98); }
-        .menu-deco {
-            height: 100%;
-            width: auto;
-            max-width: 40px;
-            object-fit: contain;
-            object-position: left center;
-            margin-right: 10px;
-        }
-        .menu-text {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: var(--text-primary);
-            letter-spacing: 1px;
-        }
-        .menu-arrow {
-            margin-left: auto;
-            margin-right: 15px;
-            color: #ccc;
-        }
+        .menu-deco { height: 100%; width: auto; max-width: 40px; object-fit: contain; object-position: left center; margin-right: 10px; }
+        .menu-text { font-size: 1.1rem; font-weight: bold; color: var(--text-primary); letter-spacing: 1px; }
+        .menu-arrow { margin-left: auto; margin-right: 15px; color: #ccc; }
 
-        /* --- 二级菜单通用表单样式 --- */
-        .sub-page-container { padding: 15px; }
-        
+        /* Form */
+        .sub-page-container { padding: 15px; padding-bottom: 50px; }
         .sys-form-group { margin-bottom: 15px; }
-        .sys-form-group label {
-            display: block; font-size: 0.85rem; color: var(--text-primary); font-weight: bold; margin-bottom: 5px;
-        }
+        .sys-form-group label { display: block; font-size: 0.85rem; color: var(--text-primary); font-weight: bold; margin-bottom: 5px; }
         .sys-input, .sys-textarea, .sys-select {
-            width: 100%; padding: 10px;
-            background: #fff;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 0.95rem;
-            color: #333;
+            width: 100%; padding: 10px; background: #fff; border: 1px solid #ccc;
+            border-radius: 4px; font-size: 0.95rem; color: #333;
         }
-        .sys-input:focus, .sys-textarea:focus { border-color: var(--nav-bg); }
-        
         .sys-btn {
-            width: 100%; padding: 12px;
-            background: var(--nav-bg);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            text-align: center;
-            margin-top: 10px;
+            width: 100%; padding: 12px; background: var(--nav-bg); color: white; border: none;
+            border-radius: 4px; font-size: 1rem; font-weight: bold; cursor: pointer; text-align: center; margin-top: 10px;
         }
-        .sys-btn-outline {
-            background: transparent; border: 1px solid var(--nav-bg); color: var(--nav-bg); cursor: pointer; border-radius: 4px;
-        }
+        .sys-btn-outline { background: transparent; border: 1px solid var(--nav-bg); color: var(--nav-bg); cursor: pointer; border-radius: 4px; }
         .sys-btn-danger { background: var(--danger); }
 
-        /* 通讯录 - 角色卡片 */
+        /* Role Card */
         .role-card-edit {
-            background: white;
-            border-radius: 6px;
-            margin-bottom: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            overflow: hidden;
-            border-left: 4px solid var(--nav-bg);
+            background: white; border-radius: 6px; margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden; border-left: 4px solid var(--nav-bg);
         }
         .role-header {
-            padding: 10px 15px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: #f9f9f9;
-            cursor: pointer;
-            border-bottom: 1px solid #eee;
+            padding: 10px 15px; display: flex; align-items: center; justify-content: space-between;
+            background: #f9f9f9; cursor: pointer; border-bottom: 1px solid #eee;
         }
         .role-header-left { display: flex; align-items: center; gap: 10px; }
         .role-edit-body { padding: 15px; display: none; background: #fff; }
@@ -264,49 +181,45 @@
         .mini-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
         
         .add-btn-float {
-            position: fixed; bottom: 30px; right: 20px;
-            width: 50px; height: 50px;
-            background: var(--nav-bg); color: white;
-            border-radius: 50%;
-            font-size: 1.5rem; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            cursor: pointer; z-index: 100;
-        }
-
-        /* 世界书 - 列表 */
-        .wb-item {
-            background: white; padding: 12px; border-radius: 4px; margin-bottom: 10px; position: relative;
-            border: 1px dashed #ccc;
-        }
-        .wb-delete {
-            position: absolute; top: 5px; right: 5px; color: var(--danger); cursor: pointer; padding: 5px;
-        }
-
-        /* 模态窗 (用于编辑User) */
-        .sys-modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6);
-            z-index: 1000;
+            position: fixed; bottom: 30px; right: 20px; width: 50px; height: 50px;
+            background: var(--nav-bg); color: white; border-radius: 50%; font-size: 1.5rem;
             display: flex; align-items: center; justify-content: center;
-            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3); cursor: pointer; z-index: 100;
+        }
+
+        /* World Book */
+        .wb-item {
+            background: white; padding: 12px; border-radius: 4px; margin-bottom: 10px; position: relative; border: 1px dashed #ccc;
+        }
+        .wb-delete { position: absolute; top: 5px; right: 5px; color: var(--danger); cursor: pointer; padding: 5px; }
+
+        /* Modal */
+        .sys-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6);
+            z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px;
         }
         .sys-modal-box {
-            background: white; width: 100%; max-width: 400px;
-            border-radius: 8px; padding: 20px;
+            background: white; width: 100%; max-width: 400px; border-radius: 8px; padding: 20px;
             max-height: 90vh; overflow-y: auto;
         }
         .sys-modal-header { font-size: 1.1rem; font-weight: bold; margin-bottom: 15px; color: var(--nav-bg); display: flex; justify-content: space-between;}
 
-        /* =========================================
-           PART 2: SNS 样式
-           ========================================= */
-
-        /* SNS Avatar */
-        .avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background-color: #ddd; flex-shrink: 0; }
+        /* SNS Layout */
+        .sns-page {
+            height: 100%;
+            background: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* 内部滚动 */
+        }
         
         /* SNS Top Nav */
         .top-nav {
-            height: 45px; background-color: var(--nav-bg); display: flex; align-items: center; padding: 0 10px; position: fixed; top: 0; width: 100%; z-index: 100; color: white; justify-content: space-between;
+            height: 45px; background-color: var(--nav-bg); display: flex; align-items: center;
+            padding: 0 10px; width: 100%; z-index: 100; color: white; justify-content: space-between;
+            flex-shrink: 0;
+            padding-top: env(safe-area-inset-top);
+            height: calc(45px + env(safe-area-inset-top));
         }
         .nav-left { display: flex; align-items: center; gap: 8px; }
         .star-icon { color: white; font-size: 1.2rem; cursor: pointer; }
@@ -315,17 +228,27 @@
         .u-name { font-weight: bold; font-size: 0.9rem; color: white; }
         .u-id { font-size: 0.75rem; color: #aab; }
         .nav-logo { height: 25px; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background-color: #ddd; flex-shrink: 0; }
 
-        /* Detail Page Nav */
         .top-nav-p2 {
-            height: 45px; background-color: rgba(33, 48, 99, 0.95); display: flex; align-items: center; padding: 0 10px; position: fixed; top: 0; width: 100%; z-index: 100; justify-content: space-between;
+            height: 45px; background-color: rgba(33, 48, 99, 0.95); display: flex; align-items: center; padding: 0 10px;
+            width: 100%; z-index: 100; justify-content: space-between; flex-shrink: 0;
+            padding-top: env(safe-area-inset-top);
+            height: calc(45px + env(safe-area-inset-top));
         }
         .nav-left-p2 { display: flex; align-items: center; height: 100%; padding-left: 5px; }
         .big-avatar { width: 50px; height: 50px; border-radius: 50%; margin-bottom: -20px; z-index: 101; object-fit: cover; }
         .p2-user-info { margin-left: 10px; display: flex; align-items: baseline; gap: 5px; color: white;}
 
-        /* Content Container */
-        .content-container { margin-top: 55px; padding: 10px; padding-bottom: 60px; }
+        /* Content Scroll Area */
+        .content-scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 10px;
+            padding-bottom: 80px; /* Leave space for bottom bar */
+        }
+
         .post-wrapper { margin-bottom: 25px; position: relative; }
         .post-meta-outside { display: flex; align-items: center; padding: 0 5px 5px 5px; }
         .meta-name { font-weight: bold; color: var(--text-primary); margin-left: 10px; font-size: 0.95rem; }
@@ -334,28 +257,24 @@
         .action-dots { color: #aaa; font-size: 1.2rem; cursor: pointer; padding: 0 5px; margin-left: 5px; line-height: 1; }
         .post-action-dots { margin-left: 10px; }
 
-        /* Card */
         .sns-card { background: var(--white); border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); padding: 0; overflow: hidden; }
         .card-media { width: 100%; min-height: 120px; background-color: #f0f2f5; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 20px; text-align: center; }
         .card-media img { width: 100%; height: auto; display: block;}
         .card-media-text { font-size: 1rem; color: #555; background: rgba(255,255,255,0.8); padding: 10px 15px; border-radius: 8px; border: 1px dashed #ccc; max-width: 90%; line-height: 1.4; }
         .card-body { padding: 12px; font-size: 0.95rem; line-height: 1.5; color: var(--text-body); white-space: pre-wrap; }
 
-        /* Post Footer */
         .post-footer-row { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding: 0 5px; }
         .footer-icons { display: flex; gap: 15px; color: #ccc; font-size: 1.2rem; align-items: center; }
         .comment-count-badge { font-size: 0.8rem; color: #888; display: flex; align-items: center; gap: 3px; }
         .active-icon { color: #ff4757 !important; }
         .star-active { color: #f1c40f !important; }
 
-        /* Btns */
         .skew-btn { background-color: var(--btn-back-bg); color: white; transform: skewX(-30deg); cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; padding: 4px 15px; font-size: 0.75rem; width: 120px; }
         .skew-btn span { transform: skewX(30deg); display: block; }
         
         .page2-btn-container { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; margin-bottom: 10px; padding: 0 5px; }
         .generating-status { font-size: 0.75rem; color: #888; font-style: italic; }
 
-        /* Comments */
         .comment-item { margin-bottom: 15px; position: relative; }
         .comment-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; padding: 0 5px; }
         .c-left { display: flex; align-items: center; gap: 8px; }
@@ -367,15 +286,20 @@
         .reply-highlight { color: #4a90e2; font-weight: bold; margin-right: 4px; }
         .comment-heart { color: #ccc; font-size: 1.1rem; align-self: center; cursor: pointer; flex-shrink: 0; }
 
-        /* SNS Bottom Nav */
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; height: 50px; background-color: var(--nav-bg); display: flex; justify-content: space-between; align-items: center; padding: 0 10px; z-index: 200; }
-        .btn-post-nav { margin-right: auto; border: 1px solid white; width: auto; background-color: var(--post-btn-color); }
-        .btn-back-nav { margin-left: 10px; border: 1px solid white; width: auto; }
-        .btn-close { color: white; font-size: 2rem; font-weight: 300; cursor: pointer; line-height: 1; margin-left: auto; margin-right: 10px;}
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed; bottom: 0; width: 100%; height: 50px; background-color: var(--nav-bg);
+            display: flex; justify-content: space-between; align-items: center; padding: 0 10px; z-index: 200;
+            padding-bottom: env(safe-area-inset-bottom);
+            height: calc(50px + env(safe-area-inset-bottom));
+        }
+        .btn-post-nav { margin-right: auto; border: 1px solid white; width: auto; background-color: var(--post-btn-color); margin-bottom: env(safe-area-inset-bottom); }
+        .btn-back-nav { margin-left: 10px; border: 1px solid white; width: auto; margin-bottom: env(safe-area-inset-bottom); }
+        .btn-close { color: white; font-size: 2rem; font-weight: 300; cursor: pointer; line-height: 1; margin-left: auto; margin-right: 10px; margin-bottom: env(safe-area-inset-bottom); }
 
-        /* SNS Modals */
+        /* Modals */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 500; display: flex; align-items: flex-end; }
-        .reply-box { background: white; width: 100%; padding: 20px; border-radius: 15px 15px 0 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); max-height: 80vh; overflow-y: auto; }
+        .reply-box { background: white; width: 100%; padding: 20px; border-radius: 15px 15px 0 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); max-height: 80vh; overflow-y: auto; padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
         .reply-box h3 { margin-top: 0; color: var(--nav-bg); margin-bottom: 15px; }
         .reply-target-select { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; background: #f9f9f9; }
         .reply-textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; height: 80px; resize: none; margin-bottom: 15px; }
@@ -387,7 +311,7 @@
         .action-menu-item:last-child { border-bottom: none; }
         .action-menu-item.danger { color: var(--danger); font-weight: bold; }
 
-        .refresh-fab { position: fixed; bottom: 70px; right: 20px; background-color: var(--nav-bg); color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-size: 1.5rem; z-index: 150; cursor: pointer; line-height: 1; padding: 0; }
+        .refresh-fab { position: fixed; bottom: 70px; right: 20px; background-color: var(--nav-bg); color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-size: 1.5rem; z-index: 150; cursor: pointer; line-height: 1; padding: 0; margin-bottom: env(safe-area-inset-bottom); }
         .more-comments-btn { background: #f0f2f5; color: #555; border: 1px solid #ccc; width: 100%; padding: 10px; border-radius: 5px; text-align: center; margin-top: 15px; cursor: pointer; font-size: 0.9rem; }
         .empty-tip { text-align: center; color: #999; margin-top: 50px; }
 
@@ -404,7 +328,7 @@
          ============================================== -->
     <div id="main-menu-page" class="system-page">
         <div class="sys-top-bar">终端 TERMINAL</div>
-        <div class="sys-content">
+        <div class="sys-content-scroll">
             <div class="user-card-container">
                 <div class="uc-bg"></div>
                 <div class="uc-overlay"></div>
@@ -491,7 +415,9 @@
             <div class="back-arrow" onclick="backToMenu()">◀</div>
             <div>通讯录</div>
         </div>
-        <div class="sub-page-container" id="contacts-list"></div>
+        <div class="sys-content-scroll">
+            <div class="sub-page-container" id="contacts-list"></div>
+        </div>
         <div class="add-btn-float" onclick="addNewRole()">+</div>
     </div>
 
@@ -502,12 +428,14 @@
             <div class="back-arrow" onclick="backToMenu()">◀</div>
             <div>世界书</div>
         </div>
-        <div class="sub-page-container">
-            <div id="worldbook-list"></div>
-            <div class="wb-item" style="border:1px dashed var(--nav-bg); text-align:center; padding:20px; color:var(--nav-bg); cursor:pointer;" onclick="addWorldBookItem()">
-                + 添加世界观条目
+        <div class="sys-content-scroll">
+            <div class="sub-page-container">
+                <div id="worldbook-list"></div>
+                <div class="wb-item" style="border:1px dashed var(--nav-bg); text-align:center; padding:20px; color:var(--nav-bg); cursor:pointer;" onclick="addWorldBookItem()">
+                    + 添加世界观条目
+                </div>
+                <button class="sys-btn" onclick="backToMenu()">保存并返回</button>
             </div>
-            <button class="sys-btn" onclick="backToMenu()">保存并返回</button>
         </div>
     </div>
 
@@ -518,25 +446,27 @@
             <div class="back-arrow" onclick="backToMenu()">◀</div>
             <div>API 设置</div>
         </div>
-        <div class="sub-page-container">
-            <div class="sys-form-group">
-                <label>API 地址 (Base URL)</label>
-                <input type="text" id="api-url" class="sys-input" value="https://api.openai.com/v1">
-                <small style="color:#666; font-size:0.75rem;">注意：通常以 /v1 结尾</small>
-            </div>
-            <div class="sys-form-group">
-                <label>API Key</label>
-                <input type="password" id="api-key" class="sys-input" placeholder="sk-...">
-            </div>
-            <div class="sys-form-group">
-                <label>模型 (Model)</label>
-                <div style="display:flex; gap:10px;">
-                    <input type="text" id="model-name" class="sys-input" value="gpt-4o-mini">
-                    <button class="sys-btn" style="width:auto; margin-top:0; padding:10px;" onclick="fetchModels()">拉取模型</button>
+        <div class="sys-content-scroll">
+            <div class="sub-page-container">
+                <div class="sys-form-group">
+                    <label>API 地址 (Base URL)</label>
+                    <input type="text" id="api-url" class="sys-input" value="https://api.openai.com/v1">
+                    <small style="color:#666; font-size:0.75rem;">注意：通常以 /v1 结尾</small>
                 </div>
-                <select id="model-select" class="sys-select hidden" onchange="applyModelSelection()" style="margin-top:5px;"></select>
+                <div class="sys-form-group">
+                    <label>API Key</label>
+                    <input type="password" id="api-key" class="sys-input" placeholder="sk-...">
+                </div>
+                <div class="sys-form-group">
+                    <label>模型 (Model)</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="model-name" class="sys-input" value="gpt-4o-mini">
+                        <button class="sys-btn" style="width:auto; margin-top:0; padding:10px;" onclick="fetchModels()">拉取模型</button>
+                    </div>
+                    <select id="model-select" class="sys-select hidden" onchange="applyModelSelection()" style="margin-top:5px;"></select>
+                </div>
+                <button class="sys-btn" onclick="saveApiSettings()">保存设置</button>
             </div>
-            <button class="sys-btn" onclick="saveApiSettings()">保存设置</button>
         </div>
     </div>
 
@@ -545,7 +475,7 @@
          ============================================== -->
     
     <!-- FEED PAGE -->
-    <div id="feed-page" class="hidden" style="background:var(--bg-color); min-height:100vh;">
+    <div id="feed-page" class="sns-page hidden">
         <div class="top-nav">
             <div class="nav-left">
                 <span class="star-icon" id="fav-filter-btn" onclick="toggleFavFilter()">★</span>
@@ -558,12 +488,12 @@
             <img src="https://files.catbox.moe/gq5aoo.png" class="nav-logo">
         </div>
 
-        <div class="content-container" id="feed-container"></div>
+        <div class="content-scroll-area" id="feed-container"></div>
         <div class="refresh-fab" onclick="generateMultiPosts()">↻</div>
     </div>
 
     <!-- DETAIL PAGE -->
-    <div id="detail-page" class="hidden" style="background:var(--bg-color); min-height:100vh;">
+    <div id="detail-page" class="sns-page hidden">
         <div class="top-nav-p2">
             <div class="nav-left-p2">
                 <img src="" class="big-avatar" id="p2-avatar">
@@ -575,7 +505,7 @@
             <img src="https://files.catbox.moe/gq5aoo.png" class="nav-logo">
         </div>
 
-        <div class="content-container">
+        <div class="content-scroll-area">
             <div style="text-align: right; color: #888899; font-size: 0.75rem; margin-bottom: 5px; padding-right: 5px;" id="detail-time-display">Time</div>
 
             <div class="sns-card">
@@ -850,7 +780,8 @@
             document.getElementById('btn-back-trigger').classList.add('hidden');
             applyUserInfoToSNS();
             renderFeed();
-            window.scrollTo(0, 0);
+            // Scroll to top of the scroll container
+            document.getElementById('feed-container').scrollTop = 0;
         }
         function exitSNS() {
             document.getElementById('feed-page').classList.add('hidden');
@@ -995,7 +926,10 @@
             const btn = event.target;
             btn.innerText = "拉取中...";
             try {
-                const res = await fetch(url + '/models', { headers: { 'Authorization': `Bearer ${key}` } });
+                const res = await fetch(url + '/models', { 
+                    headers: { 'Authorization': `Bearer ${key}` },
+                    referrerPolicy: 'no-referrer' // 防止跨域拦截
+                });
                 if(!res.ok) throw new Error("Fetch failed");
                 const data = await res.json();
                 const select = document.getElementById('model-select');
@@ -1033,32 +967,42 @@
             return `[WORLD SETTING / CURRENT EVENTS]:\n${text}`;
         }
         
-        // 辅助：获取详细日期
         function getDetailedDate() {
             const now = new Date();
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            // 输出类似 "Tuesday, January 20, 2026"
             return now.toLocaleDateString('en-US', options);
         }
 
         async function generateMultiPosts() {
+            // 1. 如果没有角色，提示并退出
             if(roles.length === 0) { alert("请先在通讯录添加角色"); return; }
+            
+            // 2. 显示加载动画
             document.getElementById('loading').classList.remove('hidden');
-            const shuffledRoles = [...roles].sort(() => 0.5 - Math.random());
-            const selectedAuthors = shuffledRoles.slice(0, 3); 
-            const tasks = selectedAuthors.map(author => generateAIPostWithChain(author));
-            await Promise.all(tasks);
+            
+            // --- 修改核心：只随机选 1 个人 ---
+            const randomAuthor = roles[Math.floor(Math.random() * roles.length)];
+            
+            // 3. 执行生成任务（这个函数内部也是只发 1 次 API 请求，包含帖子+评论）
+            await generateAIPostWithChain(randomAuthor);
+            
+            // 4. 隐藏加载动画，回到顶部，保存
             document.getElementById('loading').classList.add('hidden');
-            window.scrollTo(0,0);
+            document.getElementById('feed-container').scrollTop = 0;
             saveAllData();
         }
 
+        // --- 核心优化：防截断/文本标记模式 (JSON REMOVED) ---
         async function generateAIPostWithChain(authorRole) {
             const worldInfo = getWorldContext();
             const now = new Date();
             const timeString = `${now.getHours()}:${now.getMinutes().toString().padStart(2,'0')}`;
             const fullDate = getDetailedDate();
             
+            // 准备潜在评论者名单 (排除作者自己)
+            const potentialCommenters = roles.filter(r => r.id !== authorRole.id);
+            const commentersInfo = potentialCommenters.map(r => `${r.name} (${r.id}): ${r.persona}`).join("\n");
+
             const sysPrompt = `
             ${HUMAN_VIBE_PROMPT}
             [CURRENT ACTOR]
@@ -1066,44 +1010,111 @@
             ID: ${authorRole.id}
             Persona: ${authorRole.persona}
             [ENVIRONMENT]
-            Date: ${fullDate} (Important: Check if this date implies any holidays or birthdays)
+            Date: ${fullDate}
             Time: ${timeString}
             ${worldInfo}
+            [POTENTIAL COMMENTERS]
+            ${commentersInfo}
+
             [TASK]
-            Write a short SNS post (max 100 chars).
-            If the date matches a holiday or event, react to it.
-            [IMAGE RULE]
-            Do not output emoji alone. Describe the image at the end: [Description 📷].
+            1. Write a short SNS post (max 100 chars) as the Current Actor.
+            2. If date implies holiday, react to it.
+            3. ALSO, simulate 1 to 3 immediate comments from the Potential Commenters list.
+            
+            [OUTPUT FORMAT - NO JSON]
+            Please output using the following EXACT SEPARATORS.
+            
+            @@POST@@
+            (Write post content here)
+            @@IMG@@
+            (Write image description here, or "No Image")
+            @@COM@@
+            @commenter_id (Write comment content here)
+            @@COM@@
+            @another_id (Write another comment...)
             `;
             
-            const contentRaw = await callAI([{role: "system", content: sysPrompt}]);
+            const contentRaw = await callAI([
+                {role: "system", content: sysPrompt},
+                {role: "user", content: "Please generate the SNS content following the format."}
+            ]);
             if(!contentRaw) return;
 
-            let content = contentRaw;
-            let imageDesc = "Image";
-            const match = contentRaw.match(/\[(.*?)\]$/);
-            if(match) {
-                imageDesc = match[1]; 
-                content = contentRaw.replace(match[0], "").trim(); 
-            } else {
-                const emojiMatch = contentRaw.match(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu);
-                if(emojiMatch) imageDesc = emojiMatch[emojiMatch.length-1];
+            console.log("AI Output (Truncation Safe):", contentRaw);
+
+            // --- 文本标记解析逻辑 (比 JSON 强壮得多) ---
+            
+            // 1. 提取 Post
+            let postContent = "...";
+            const postParts = contentRaw.split("@@POST@@");
+            if(postParts.length > 1) {
+                postContent = postParts[1].split("@@")[0].trim();
             }
 
+            // 2. 提取 Image Desc
+            let imgDesc = "Image";
+            const imgParts = contentRaw.split("@@IMG@@");
+            if(imgParts.length > 1) {
+                imgDesc = imgParts[1].split("@@")[0].trim();
+            }
+
+            // 3. 提取 Comments
+            let extractedComments = [];
+            const comParts = contentRaw.split("@@COM@@");
+            // 从索引 1 开始，因为索引 0 是 POST/IMG 部分
+            for(let i=1; i<comParts.length; i++) {
+                let line = comParts[i].trim();
+                if(!line) continue;
+                
+                // 格式应该是: "@id 内容"
+                // 我们尝试分离第一个空格前的 ID
+                const firstSpaceIndex = line.indexOf(' ');
+                if(firstSpaceIndex !== -1) {
+                    const idStr = line.substring(0, firstSpaceIndex).trim();
+                    const textStr = line.substring(firstSpaceIndex).trim();
+                    
+                    // 匹配角色
+                    const commenter = roles.find(r => r.id === idStr || idStr.includes(r.id)); // 模糊匹配防止AI写错
+                    if(commenter) {
+                        extractedComments.push({
+                            commenter_id: commenter.id,
+                            content: textStr
+                        });
+                    }
+                }
+            }
+
+            // --- 构建数据并上屏 ---
             const newPost = {
                 uid: Date.now() + Math.random().toString(),
                 author: authorRole,
                 time: getTimestamp(),
-                content: content,
+                content: postContent,
                 image: null, 
-                imageDesc: imageDesc, 
+                imageDesc: imgDesc, 
                 isFav: false,
                 comments: []
             };
 
             posts.unshift(newPost);
             renderFeed();
-            await summonBatchCommentsForPost(newPost);
+
+            // 异步延时添加评论
+            if (extractedComments.length > 0) {
+                for (let c of extractedComments) {
+                    const commenter = roles.find(r => r.id === c.commenter_id);
+                    if (commenter) {
+                        const delay = Math.floor(Math.random() * 2000) + 500;
+                        await new Promise(r => setTimeout(r, delay));
+                        addCommentToPost(newPost, {
+                            author: commenter,
+                            time: getTimestamp(),
+                            content: c.content,
+                            replyTo: null
+                        });
+                    }
+                }
+            }
         }
 
         async function summonBatchComments() {
@@ -1113,6 +1124,7 @@
             await summonBatchCommentsForPost(post);
         }
 
+        // --- 核心优化：防截断的评论生成 ---
         async function summonBatchCommentsForPost(post) {
             generatingPostIds.add(post.uid);
             updateDetailStatus(post.uid);
@@ -1133,66 +1145,60 @@
             ${worldInfo}
             [USER DATA]
             ${userInfo}
-            [THREAD HISTORY (READ THIS!)]
+            [THREAD HISTORY]
             ${threadCtx}
             [AVAILABLE ACTORS]
             ${availableRoles}
             [TASK]
-            Decide how many characters (between 1 to 3) will comment now based on thread heat.
-            Selection Priority:
-            1. Characters with specific relationships to the topic 
-            2. Random characters (Low Priority).
+            Decide how many characters (randomly 1 to 3) will comment now.
             
-            [DISTRIBUTION RULE]
-            Do NOT let all characters reply to the same target.
-            Some should reply to OP, but others should reply to previous comments (creating sub-threads).
-            [STRICT JSON OUTPUT]
-            Return a JSON Array. DO NOT output Markdown.
-            Format: [{"role_id": "@id", "content": "text"}]
-            [CONTENT RULES]
-            1. If replying to OP: Content = "Nice photo!" (NO @ID)
-            2. If replying to @someone: Content = "@someone I agree." (MUST HAVE @ID)
+            [OUTPUT FORMAT - NO JSON]
+            Output comments strictly using this separator:
+            
+            @@COM@@
+            @role_id Comment content here
+            @@COM@@
+            @role_id Comment content here
             `;
             
-            const jsonStr = await callAI([{role: "system", content: sysPrompt}]);
+            const rawOutput = await callAI([
+                {role: "system", content: sysPrompt},
+                {role: "user", content: "Please generate comments now."}
+            ]);
             
-            if (jsonStr) {
-                try {
-                    // --- 暴力清洗逻辑 ---
-                    // 不管AI回了什么，只提取 [ 和 ] 中间的内容
-                    let cleanJson = jsonStr.replace(/```json/gi, "").replace(/```/g, "").trim();
-                    const start = cleanJson.indexOf('[');
-                    const end = cleanJson.lastIndexOf(']');
-                    
-                    if (start !== -1 && end !== -1) {
-                        cleanJson = cleanJson.substring(start, end + 1);
-                    }
+            if (rawOutput) {
+                const parts = rawOutput.split("@@COM@@");
+                for (let i = 1; i < parts.length; i++) {
+                    let line = parts[i].trim();
+                    if(!line) continue;
 
-                    const commentsArray = JSON.parse(cleanJson);
-                    
-                    if(Array.isArray(commentsArray)) {
-                        for (let item of commentsArray) {
+                    const firstSpaceIndex = line.indexOf(' ');
+                    if(firstSpaceIndex !== -1) {
+                        const idStr = line.substring(0, firstSpaceIndex).trim();
+                        let textStr = line.substring(firstSpaceIndex).trim();
+                        
+                        // 查找角色 (包括 User 和 Roles)
+                        let roleObj = roles.find(r => r.id === idStr || idStr.includes(r.id));
+                        if(!roleObj && user.id === idStr) roleObj = user;
+                        if(!roleObj && post.author.id === idStr) roleObj = post.author;
+
+                        if(roleObj) {
+                            // 清理内容中的重复ID
+                            if (textStr.startsWith(post.author.id)) {
+                                 textStr = textStr.replace(post.author.id, "").trim();
+                            }
+                            
                             const delay = Math.floor(Math.random() * 2000) + 1000;
                             await new Promise(r => setTimeout(r, delay));
-                            
-                            const roleObj = roles.find(r => r.id === item.role_id) || (post.author.id === item.role_id ? post.author : null);
-                            if(roleObj) {
-                                let cleanContent = item.content;
-                                if (cleanContent.startsWith(post.author.id)) {
-                                     cleanContent = cleanContent.replace(post.author.id, "").trim();
-                                }
-                                addCommentToPost(post, {
-                                    author: roleObj,
-                                    time: getTimestamp(),
-                                    content: cleanContent,
-                                    replyTo: null
-                                });
-                            }
+
+                            addCommentToPost(post, {
+                                author: roleObj,
+                                time: getTimestamp(),
+                                content: textStr,
+                                replyTo: null
+                            });
                         }
                     }
-                } catch(e) { 
-                    console.error("Comment Gen Error:", e);
-                    // 默默失败，不打扰用户，但在控制台留档
                 }
             }
 
@@ -1226,6 +1232,7 @@
             posts.unshift(newPost);
             renderFeed();
             saveAllData();
+            // User 发布帖子时，也一次性请求初始评论
             await summonBatchCommentsForPost(newPost);
         }
 
@@ -1247,17 +1254,13 @@
 
             roles.forEach(r => {
                 if(r.id === user.id || r.id === post.author.id) return;
-                
                 const opt = document.createElement('option');
                 opt.value = r.id;
-                
-                // 区分回复与召唤
                 if (inThreadIds.has(r.id)) {
-                    opt.innerText = `↪ 回复: ${r.name}`; // 在楼里
+                    opt.innerText = `↪ 回复: ${r.name}`; 
                 } else {
-                    opt.innerText = `📡 召唤: ${r.name}`; // 不在楼里
+                    opt.innerText = `📡 召唤: ${r.name}`; 
                 }
-                
                 select.appendChild(opt);
             });
 
@@ -1274,8 +1277,6 @@
 
             const post = posts.find(p => p.uid === currentPostId);
             let contentText = text;
-            
-            // 如果不是回复楼主，手动加上 @ID
             const isReplyToOP = (targetId === post.author.id);
             if(!isReplyToOP) contentText = `${targetId} ${text}`;
 
@@ -1315,7 +1316,10 @@
             `;
             
             await new Promise(r => setTimeout(r, 1500));
-            const aiReply = await callAI([{role: "system", content: sysPrompt}]);
+            const aiReply = await callAI([
+                {role: "system", content: sysPrompt},
+                {role: "user", content: "Reply to the user now."}
+            ]);
             
             if(aiReply) {
                 const currentP = posts.find(p => p.uid === postUID);
@@ -1347,6 +1351,7 @@
             el.innerText = generatingPostIds.has(uid) ? "AI 正在输入..." : "";
         }
         
+        // --- 核心修改：callAI 增强稳定性 ---
         async function callAI(messages) {
             if(!config.key) {
                 alert("未设置 API Key");
@@ -1356,17 +1361,21 @@
                 // 增加 max_tokens 防止回复截断导致 JSON 损坏
                 const res = await fetch(config.url + '/chat/completions', {
                     method: 'POST',
+                    // 关键修改：no-referrer 防止公益站拦截本地文件请求
+                    referrerPolicy: 'no-referrer',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${config.key}` },
                     body: JSON.stringify({ 
                         model: config.model, 
                         messages: messages, 
-                        max_tokens: 600, 
-                        temperature: 0.9 
+                        max_tokens: 3000, // 增加 Token 限制以容纳帖子+多条评论
+                        temperature: 0.9,
+                        stream: false // 保持非流式
                     })
                 });
                 
                 if(!res.ok) {
                     if (res.status === 401) throw new Error("API Key 无效或余额不足 (401)");
+                    if (res.status === 403) throw new Error("API 拒绝访问 (403) - 可能是跨域限制");
                     if (res.status === 404) throw new Error("API 地址错误 (404)");
                     if (res.status === 500) throw new Error("公益站服务器内部错误 (500)");
                     throw new Error("API Status: " + res.status);
@@ -1381,12 +1390,10 @@
 
             } catch(e) {
                 console.error("AI Error:", e);
-                // 只有在网络错误(fetch failed)时才弹窗，避免刷屏
                 if (e.message.includes("Failed to fetch")) {
                     alert("网络错误：无法连接到 API。\n原因可能是：\n1. 跨域限制 (CORS)：该公益站不支持网页直连\n2. 地址填错了");
                 } else {
-                    // 其他错误只显示一次
-                    alert("生成失败：" + e.message);
+                    console.log("生成轻微报错 (可忽略):" + e.message);
                 }
                 return null;
             }
