@@ -1064,13 +1064,14 @@
             Date: ${fullDate}
             Time: ${timeString}
             ${worldInfo}
+            Current User Info: ${user.name} (${user.id}) Persona: ${user.persona}
             [POTENTIAL COMMENTERS]
             (These are characters currently online. Friends/Related people are prioritized)
             ${commentersInfo}
 
             [TASK]
             1. Write a short SNS post (max 100 chars) as the Current Actor.
-            2. If date implies holiday, react to it.
+            2. If date implies holiday or matches a birthday (in Persona or User Info), you may react to it.
             3. ALSO, simulate 1 to 3 immediate comments from the Potential Commenters list.
             
             [OUTPUT FORMAT - NO JSON]
@@ -1079,7 +1080,7 @@
             @@POST@@
             (Write post content here)
             @@IMG@@
-            (Write image description here, or "No Image")
+            (请用中文简短描述画面内容。如果不生成图片，请输出 "No Image")
             @@COM@@
             @commenter_id (Write comment content here)
             @@COM@@
@@ -1239,6 +1240,7 @@
             ${availableRolesStr}
             [TASK]
             Decide how many characters (randomly 1 to 3) will comment now.
+            If it's a holiday or someone's birthday (check Personas), characters may mention it.
             
             [OUTPUT FORMAT - NO JSON]
             Output comments strictly using this separator:
@@ -1396,12 +1398,17 @@
             [ROLE]
             You are ${targetRole.name} (${targetRole.id}).
             Persona: ${targetRole.persona}
+            [USER INFO]
+            Name: ${user.name}
+            ID: ${user.id}
+            Persona: ${user.persona}
             [CONTEXT]
             ${getThreadContext(post)}
             [EVENT]
             User (${user.id}) just said to YOU: "${userText}"
             [TASK]
             Reply specifically to the user.
+            Check User Persona: If today matches User's birthday, mention it warmly.
             Since the User is NOT the OP (unless User is OP), usually you should start with @${user.id}.
             If User IS the OP, do not use @.
             `;
