@@ -45,7 +45,15 @@
         }
 
         .hidden { display: none !important; }
-        input, textarea, select { font-family: inherit; outline: none;}
+        
+        /* 修复输入框拖动和选择体验 */
+        input, textarea, select { 
+            font-family: inherit; 
+            outline: none;
+            user-select: text;
+            -webkit-user-select: text;
+            touch-action: manipulation;
+        }
 
         .scrollable-page {
             height: 100%;
@@ -128,23 +136,36 @@
             justify-content: center;
             color: white; 
             text-shadow: 0 1px 3px rgba(0,0,0,0.5);
-            min-width: 0; /* 防止文字过长撑开容器 */
+            min-width: 0; 
+            overflow: hidden; /* ID 滑动需要 */
         }
-        .uc-name { font-size: 1.4rem; font-weight: bold; margin-bottom: 2px; }
-        .uc-id { font-size: 0.85rem; opacity: 0.9; font-family: monospace; }
+        .uc-name { font-size: 1.4rem; font-weight: bold; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
+        /* ID 水平滑动样式 */
+        .uc-id, .meta-id, .c-id, .u-id { 
+            font-size: 0.85rem; 
+            opacity: 0.9; 
+            font-family: monospace;
+            white-space: nowrap;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE */
+        }
+        .uc-id::-webkit-scrollbar, .meta-id::-webkit-scrollbar, .c-id::-webkit-scrollbar, .u-id::-webkit-scrollbar { 
+            display: none; 
+        }
+
         .uc-persona-preview { 
             font-size: 0.75rem; 
             opacity: 0.7; 
             margin-top: 5px;
-            
-            /* 核心修改：限制最多显示2行，多余显示省略号 */
             display: -webkit-box;
-            -webkit-line-clamp: 2;     /* 这里数字2代表只显示两行 */
+            -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
-            white-space: normal;       /* 允许文字换行 */
-            text-overflow: ellipsis;   /* 多余文字变省略号 */
+            white-space: normal;
+            text-overflow: ellipsis;
         }
         .uc-edit-btn {
             position: absolute; right: 15px; top: 15px;
@@ -179,7 +200,7 @@
         }
         .sys-btn-outline { background: transparent; border: 1px solid var(--nav-bg); color: var(--nav-bg); cursor: pointer; border-radius: 4px; }
         .sys-btn-danger { background: var(--danger); }
-
+        
         /* Role Card Edit */
         .role-card-edit {
             background: white; border-radius: 6px; margin-bottom: 12px;
@@ -189,12 +210,11 @@
             padding: 10px 15px; display: flex; align-items: center; justify-content: space-between;
             background: #f9f9f9; cursor: pointer; border-bottom: 1px solid #eee;
         }
-        .role-header-left { display: flex; align-items: center; gap: 10px; flex: 1; }
+        .role-header-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
         .role-edit-body { padding: 15px; display: none; background: #fff; }
         .role-edit-body.active { display: block; }
-        .mini-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
+        .mini-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
         
-        /* === NEW: Role Toggle Button === */
         .role-toggle-btn {
             width: 24px; height: 24px; border-radius: 50%;
             border: 2px solid var(--nav-bg); cursor: pointer;
@@ -208,6 +228,17 @@
         .role-toggle-btn.inactive:after { content: "✕"; }
         .role-toggle-btn.active:after { content: "✓"; }
 
+        /* 防误触的删除按钮样式 */
+        .mini-delete-btn {
+            font-size: 0.8rem;
+            color: #999;
+            text-decoration: underline;
+            cursor: pointer;
+            padding: 10px 0;
+            display: inline-block;
+        }
+        .mini-delete-btn:hover { color: var(--danger); }
+
         .add-btn-float {
             position: fixed; bottom: 30px; right: 20px; width: 50px; height: 50px;
             background: var(--nav-bg); color: white; border-radius: 50%; font-size: 1.5rem;
@@ -219,7 +250,10 @@
         .wb-item {
             background: white; padding: 12px; border-radius: 4px; margin-bottom: 10px; position: relative; border: 1px dashed #ccc;
         }
-        .wb-delete { position: absolute; top: 5px; right: 5px; color: var(--danger); cursor: pointer; padding: 5px; }
+        .wb-header-row {
+            display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
+        }
+        .wb-delete { color: var(--danger); cursor: pointer; padding: 5px; font-size: 0.9rem; }
 
         /* Modal */
         .sys-modal {
@@ -231,6 +265,14 @@
             max-height: 90vh; overflow-y: auto;
         }
         .sys-modal-header { font-size: 1.1rem; font-weight: bold; margin-bottom: 15px; color: var(--nav-bg); display: flex; justify-content: space-between;}
+
+        /* Profile Manager Styles */
+        .profile-manager-bar {
+            background: #f0f2f5; padding: 10px; border-radius: 6px; margin-bottom: 15px;
+            display: flex; gap: 5px; align-items: center;
+        }
+        .profile-select { flex: 1; padding: 5px; font-size: 0.9rem; }
+        .profile-btn { padding: 5px 10px; font-size: 0.8rem; border: 1px solid #ccc; background: white; border-radius: 4px; }
 
         /* SNS Layout */
         .sns-page {
@@ -249,13 +291,13 @@
             padding-top: env(safe-area-inset-top);
             height: calc(45px + env(safe-area-inset-top));
         }
-        .nav-left { display: flex; align-items: center; gap: 8px; }
-        .star-icon { color: white; font-size: 1.2rem; cursor: pointer; }
+        .nav-left { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+        .star-icon { color: white; font-size: 1.2rem; cursor: pointer; flex-shrink: 0;}
         .star-icon.active { color: #f1c40f; text-shadow: 0 0 5px rgba(255,255,255,0.5); }
-        .user-info { display: flex; flex-direction: column; line-height: 1.1; }
-        .u-name { font-weight: bold; font-size: 0.9rem; color: white; }
+        .user-info { display: flex; flex-direction: column; line-height: 1.1; overflow: hidden; }
+        .u-name { font-weight: bold; font-size: 0.9rem; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .u-id { font-size: 0.75rem; color: #aab; }
-        .nav-logo { height: 25px; }
+        .nav-logo { height: 25px; flex-shrink: 0; }
         .avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background-color: #ddd; flex-shrink: 0; }
 
         .top-nav-p2 {
@@ -264,9 +306,15 @@
             padding-top: env(safe-area-inset-top);
             height: calc(45px + env(safe-area-inset-top));
         }
-        .nav-left-p2 { display: flex; align-items: center; height: 100%; padding-left: 5px; }
-        .big-avatar { width: 50px; height: 50px; border-radius: 50%; margin-bottom: -20px; z-index: 101; object-fit: cover; }
-        .p2-user-info { margin-left: 10px; display: flex; align-items: baseline; gap: 5px; color: white;}
+        .nav-left-p2 { display: flex; align-items: center; height: 100%; padding-left: 5px; flex: 1; min-width: 0; }
+        .big-avatar { width: 50px; height: 50px; border-radius: 50%; margin-bottom: -20px; z-index: 101; object-fit: cover; flex-shrink: 0;}
+        .p2-user-info { margin-left: 10px; display: flex; align-items: baseline; gap: 5px; color: white; overflow: hidden; white-space: nowrap;}
+        #p2-name { 
+    white-space: nowrap; 
+    font-weight: bold; 
+    flex-shrink: 0;  /* 这一句是关键：告诉浏览器“名字绝对不能被压缩” */
+}
+        #p2-id { white-space: nowrap; overflow-x: auto; scrollbar-width: none; opacity: 0.8; font-size: 0.8rem;}
 
         /* Content Scroll Area */
         .content-scroll-area {
@@ -279,12 +327,11 @@
 
         .post-wrapper { margin-bottom: 25px; position: relative; }
         .post-meta-outside { display: flex; align-items: center; padding: 0 5px 5px 5px; }
-        .meta-name { font-weight: bold; color: var(--text-primary); margin-left: 10px; font-size: 0.95rem; }
-        .meta-id { color: #999; font-size: 0.85rem; margin-left: 8px; }
-        .meta-time { margin-left: auto; color: var(--text-secondary); font-size: 0.75rem; }
-        .action-dots { color: #aaa; font-size: 1.2rem; cursor: pointer; padding: 0 5px; margin-left: 5px; line-height: 1; }
-        .post-action-dots { margin-left: 10px; }
-
+        .meta-name { font-weight: bold; color: var(--text-primary); margin-left: 10px; font-size: 0.95rem; flex-shrink: 0; }
+        .meta-id { color: #999; font-size: 0.85rem; margin-left: 8px; flex: 1; min-width: 0; }
+        .meta-time { margin-left: 5px; color: var(--text-secondary); font-size: 0.75rem; flex-shrink: 0; white-space: nowrap;}
+        .action-dots { color: #aaa; font-size: 1.2rem; cursor: pointer; padding: 0 5px; margin-left: 5px; line-height: 1; flex-shrink: 0;}
+        
         .sns-card { background: var(--white); border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); padding: 0; overflow: hidden; }
         .card-media { width: 100%; min-height: 120px; background-color: #f0f2f5; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 20px; text-align: center; }
         .card-media img { width: 100%; height: auto; display: block;}
@@ -303,12 +350,43 @@
         .page2-btn-container { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; margin-bottom: 10px; padding: 0 5px; }
         .generating-status { font-size: 0.75rem; color: #888; font-style: italic; }
 
+        /* Comment Item Layout - REVISED */
         .comment-item { margin-bottom: 15px; position: relative; }
-        .comment-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; padding: 0 5px; }
-        .c-left { display: flex; align-items: center; gap: 8px; }
-        .c-name { color: var(--text-primary); font-weight: bold; font-size: 0.9rem; }
-        .c-id { color: #999; font-size: 0.8rem; }
-        .c-time { color: var(--text-secondary); font-size: 0.7rem; }
+        .comment-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; /* 改成这里！意思是“居中对齐” */
+    margin-bottom: 2px; 
+    padding: 0 5px; 
+    width: 100%;
+}
+        .c-left { 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            flex: 1; /* 占据剩余空间 */
+            min-width: 0; /* 允许子元素缩小 */
+            overflow: hidden; 
+        }
+        .c-name { 
+            color: var(--text-primary); 
+            font-weight: bold; 
+            font-size: 0.9rem; 
+            flex-shrink: 0; /* 禁止名字换行 */
+        }
+        .c-id { 
+            color: #999; 
+            font-size: 0.8rem; 
+            /* ID 滑动样式在上面统一定义了 */
+        }
+        .c-right {
+            display: flex; 
+            align-items: center; 
+            flex-shrink: 0; 
+            margin-left: 5px;
+        }
+        .c-time { color: var(--text-secondary); font-size: 0.7rem; white-space: nowrap; }
+        
         .comment-bubble-row { display: flex; align-items: flex-start; gap: 10px; padding-left: 5px; }
         .comment-bubble { background: white; border-radius: 12px; padding: 8px 12px; font-size: 0.9rem; line-height: 1.4; color: var(--text-body); flex: 1; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         .reply-highlight { color: #4a90e2; font-weight: bold; margin-right: 4px; }
@@ -405,30 +483,45 @@
         </div>
     </div>
 
-    <!-- User Edit Modal -->
+    <!-- User Edit Modal with Multi-Profile -->
     <div id="user-edit-modal" class="sys-modal hidden">
         <div class="sys-modal-box">
             <div class="sys-modal-header">
-                <span>编辑个人资料</span>
+                <span>个人资料 & 档案管理</span>
                 <span onclick="closeUserEditModal()" style="cursor:pointer;">×</span>
             </div>
-            <div class="sys-form-group">
-                <label>昵称</label>
-                <input type="text" id="edit-user-name" class="sys-input">
+            
+            <!-- 多档案管理栏 -->
+            <div class="profile-manager-bar">
+                <select id="profile-select" class="profile-select" onchange="switchProfile(this.value)"></select>
+                <button class="profile-btn" onclick="createNewProfile()">+ 新建</button>
+                <button class="profile-btn" style="color:red;" onclick="deleteCurrentProfile()">删除</button>
             </div>
+
             <div class="sys-form-group">
-                <label>ID</label>
-                <input type="text" id="edit-user-id" class="sys-input">
+                <label>档案名称 (用于区分)</label>
+                <input type="text" id="edit-profile-name" class="sys-input" placeholder="例如：默认马甲">
             </div>
-            <div class="sys-form-group">
-                <label>头像 URL</label>
-                <input type="text" id="edit-user-avatar" class="sys-input">
+
+            <div style="border-top:1px solid #eee; margin:10px 0; padding-top:10px;">
+                <div class="sys-form-group">
+                    <label>昵称</label>
+                    <input type="text" id="edit-user-name" class="sys-input">
+                </div>
+                <div class="sys-form-group">
+                    <label>ID</label>
+                    <input type="text" id="edit-user-id" class="sys-input">
+                </div>
+                <div class="sys-form-group">
+                    <label>头像 URL</label>
+                    <input type="text" id="edit-user-avatar" class="sys-input">
+                </div>
+                <div class="sys-form-group">
+                    <label>设定 (Persona)</label>
+                    <textarea id="edit-user-persona" class="sys-textarea" rows="3"></textarea>
+                </div>
             </div>
-            <div class="sys-form-group">
-                <label>设定 (Persona)</label>
-                <textarea id="edit-user-persona" class="sys-textarea" rows="3"></textarea>
-            </div>
-            <button class="sys-btn" onclick="saveUserEdit()">保存变更</button>
+            <button class="sys-btn" onclick="saveUserEdit()">保存所有变更</button>
         </div>
     </div>
 
@@ -692,13 +785,20 @@
 
         // --- 全局状态 ---
         let config = { url: "https://api.openai.com/v1", key: "", model: "gpt-4o-mini" };
+        
+        // Multi-User Profile Support
+        let userProfiles = [];
+        let currentProfileIndex = 0;
+        
         let user = { 
             name: "司令", 
             id: "@helios_cmdr", 
             avatar: "https://files.catbox.moe/pq5tub.jpg", 
             persona: "话少可靠的指挥官。", 
-            worldBooks: [] 
+            worldBooks: [],
+            profileName: "Default" // Internal name for the profile
         };
+        
         let roles = []; 
         let posts = []; 
         
@@ -719,25 +819,49 @@
         // --- 数据持久化 ---
         function saveAllData() {
             localStorage.setItem('helios_config', JSON.stringify(config));
-            localStorage.setItem('helios_user', JSON.stringify(user));
+            
+            // Sync current user to profiles array
+            userProfiles[currentProfileIndex] = JSON.parse(JSON.stringify(user));
+            localStorage.setItem('helios_user_profiles', JSON.stringify(userProfiles));
+            localStorage.setItem('helios_current_profile_idx', currentProfileIndex);
+
             localStorage.setItem('helios_roles', JSON.stringify(roles));
             localStorage.setItem('helios_posts', JSON.stringify(posts));
         }
 
         function loadAllData() {
             if(localStorage.getItem('helios_config')) config = JSON.parse(localStorage.getItem('helios_config'));
-            if(localStorage.getItem('helios_user')) {
-                let u = JSON.parse(localStorage.getItem('helios_user'));
-                if (typeof u.worldBook === 'string' && u.worldBook) {
-                    u.worldBooks = [{ content: u.worldBook }];
-                    delete u.worldBook;
+            
+            // Multi-profile migration & load
+            if(localStorage.getItem('helios_user_profiles')) {
+                userProfiles = JSON.parse(localStorage.getItem('helios_user_profiles'));
+                currentProfileIndex = parseInt(localStorage.getItem('helios_current_profile_idx') || "0");
+                if (currentProfileIndex >= userProfiles.length) currentProfileIndex = 0;
+                user = userProfiles[currentProfileIndex];
+            } else {
+                // Fallback for old data or new user
+                if(localStorage.getItem('helios_user')) {
+                    let u = JSON.parse(localStorage.getItem('helios_user'));
+                    if (typeof u.worldBook === 'string' && u.worldBook) {
+                        u.worldBooks = [{ content: u.worldBook, isEnabled: true }];
+                        delete u.worldBook;
+                    }
+                    if (!u.worldBooks) u.worldBooks = [];
+                    // Ensure worldBooks have isEnabled
+                    u.worldBooks.forEach(w => { if(w.isEnabled === undefined) w.isEnabled = true; });
+                    u.profileName = "默认档案";
+                    user = u;
                 }
-                if (!u.worldBooks) u.worldBooks = [];
-                user = u;
+                userProfiles = [user];
+                currentProfileIndex = 0;
             }
+
+            // Ensure current user worldbooks structure
+            if (!user.worldBooks) user.worldBooks = [];
+            user.worldBooks.forEach(w => { if(w.isEnabled === undefined) w.isEnabled = true; });
+
             if(localStorage.getItem('helios_roles')) {
                 roles = JSON.parse(localStorage.getItem('helios_roles'));
-                // 确保每个角色都有 isEnabled 属性，默认为 true
                 roles.forEach(r => {
                     if (r.isEnabled === undefined) r.isEnabled = true;
                 });
@@ -756,11 +880,14 @@
             }
         }
         
-        // --- NEW: Backup & Import Logic ---
         function exportData() {
+            // Update current profile before export
+            userProfiles[currentProfileIndex] = user;
+            
             const data = {
                 config: localStorage.getItem('helios_config'),
-                user: localStorage.getItem('helios_user'),
+                user_profiles: JSON.stringify(userProfiles),
+                current_profile_idx: currentProfileIndex,
                 roles: localStorage.getItem('helios_roles'),
                 posts: localStorage.getItem('helios_posts')
             };
@@ -781,7 +908,18 @@
                 try {
                     const data = JSON.parse(e.target.result);
                     if(data.config) localStorage.setItem('helios_config', data.config);
-                    if(data.user) localStorage.setItem('helios_user', data.user);
+                    
+                    if(data.user_profiles) {
+                        localStorage.setItem('helios_user_profiles', data.user_profiles);
+                        localStorage.setItem('helios_current_profile_idx', data.current_profile_idx || 0);
+                    } else if (data.user) {
+                        // Legacy import
+                        let u = JSON.parse(data.user);
+                        u.profileName = "Imported";
+                        localStorage.setItem('helios_user_profiles', JSON.stringify([u]));
+                        localStorage.setItem('helios_current_profile_idx', 0);
+                    }
+
                     if(data.roles) localStorage.setItem('helios_roles', data.roles);
                     if(data.posts) localStorage.setItem('helios_posts', data.posts);
                     alert("导入成功，页面即将刷新");
@@ -792,7 +930,7 @@
                 }
             };
             reader.readAsText(file);
-            input.value = ''; // Reset input
+            input.value = ''; 
         }
 
         // --- 外部系统导航 ---
@@ -817,7 +955,6 @@
             document.getElementById('btn-back-trigger').classList.add('hidden');
             applyUserInfoToSNS();
             renderFeed();
-            // Scroll to top of the scroll container
             document.getElementById('feed-container').scrollTop = 0;
         }
         function exitSNS() {
@@ -827,7 +964,7 @@
             showSystemPage('main-menu-page');
         }
 
-        // --- User Profile & UI ---
+        // --- User Profile & UI (Refined for Multi-User) ---
         function updateUserCardUI() {
             document.getElementById('uc-avatar-img').src = user.avatar;
             document.getElementById('uc-name-txt').innerText = user.name;
@@ -839,25 +976,97 @@
             document.getElementById('nav-name-1').innerText = user.name;
             document.getElementById('nav-id-1').innerText = user.id;
         }
+        
         function openUserEditModal() {
+            // Populate select dropdown
+            const select = document.getElementById('profile-select');
+            select.innerHTML = "";
+            userProfiles.forEach((p, idx) => {
+                const opt = document.createElement('option');
+                opt.value = idx;
+                opt.innerText = p.profileName || `档案 ${idx + 1}`;
+                if (idx === currentProfileIndex) opt.selected = true;
+                select.appendChild(opt);
+            });
+
+            loadProfileToEditInputs();
+            document.getElementById('user-edit-modal').classList.remove('hidden');
+        }
+        
+        function loadProfileToEditInputs() {
+            document.getElementById('edit-profile-name').value = user.profileName || "档案";
             document.getElementById('edit-user-name').value = user.name;
             document.getElementById('edit-user-id').value = user.id;
             document.getElementById('edit-user-avatar').value = user.avatar;
             document.getElementById('edit-user-persona').value = user.persona;
-            document.getElementById('user-edit-modal').classList.remove('hidden');
         }
+
         function closeUserEditModal() { document.getElementById('user-edit-modal').classList.add('hidden'); }
+        
         function saveUserEdit() {
+            user.profileName = document.getElementById('edit-profile-name').value;
             user.name = document.getElementById('edit-user-name').value;
             user.id = document.getElementById('edit-user-id').value;
             user.avatar = document.getElementById('edit-user-avatar').value;
             user.persona = document.getElementById('edit-user-persona').value;
-            saveAllData();
+            
+            saveAllData(); // This syncs user to userProfiles array
             updateUserCardUI();
             closeUserEditModal();
         }
 
-        // --- Contacts Logic (Modified with Toggle) ---
+        function switchProfile(index) {
+            // Save current unsaved changes to memory first? No, simple switch discards unsaved modal changes or assumes saved.
+            // Let's reload user from array
+            currentProfileIndex = parseInt(index);
+            user = userProfiles[currentProfileIndex];
+            if (!user.worldBooks) user.worldBooks = []; // Safety
+            loadProfileToEditInputs();
+            updateUserCardUI(); // Reflect change immediately
+            saveAllData(); // Persist switch
+        }
+
+        function createNewProfile() {
+            const newProfile = {
+                name: "新用户",
+                id: "@new_user",
+                avatar: "",
+                persona: "",
+                worldBooks: [],
+                profileName: "新档案"
+            };
+            userProfiles.push(newProfile);
+            currentProfileIndex = userProfiles.length - 1;
+            user = newProfile;
+            
+            // Re-render select
+            const select = document.getElementById('profile-select');
+            const opt = document.createElement('option');
+            opt.value = currentProfileIndex;
+            opt.innerText = user.profileName;
+            opt.selected = true;
+            select.appendChild(opt);
+            
+            loadProfileToEditInputs();
+            saveAllData();
+        }
+
+        function deleteCurrentProfile() {
+            if(userProfiles.length <= 1) {
+                alert("至少保留一个档案");
+                return;
+            }
+            if(!confirm("确定删除当前档案？")) return;
+            
+            userProfiles.splice(currentProfileIndex, 1);
+            currentProfileIndex = 0;
+            user = userProfiles[0];
+            openUserEditModal(); // Re-open to refresh list
+            updateUserCardUI();
+            saveAllData();
+        }
+
+        // --- Contacts Logic ---
         function renderContactsPage() {
             const container = document.getElementById('contacts-list');
             container.innerHTML = "";
@@ -896,7 +1105,9 @@
                             <label>角色设定 (Prompt)</label>
                             <textarea class="sys-textarea" rows="3" onchange="updateRole(${idx}, 'persona', this.value)">${r.persona}</textarea>
                         </div>
-                        <button class="sys-btn sys-btn-danger" onclick="deleteRole(${idx})">🗑️ 删除角色</button>
+                        <div style="text-align:left; margin-top:10px;">
+                            <span class="mini-delete-btn" onclick="deleteRole(${idx})">🗑️ 删除此角色</span>
+                        </div>
                     </div>
                 `;
                 container.appendChild(div);
@@ -914,7 +1125,7 @@
             }
         }
         function toggleRoleEnabled(e, idx) {
-            e.stopPropagation(); // Prevent opening edit body
+            e.stopPropagation(); 
             if (roles[idx].isEnabled === undefined) roles[idx].isEnabled = true;
             roles[idx].isEnabled = !roles[idx].isEnabled;
             saveAllData();
@@ -932,27 +1143,44 @@
             if(confirm("确定删除该角色？")) { roles.splice(idx, 1); saveAllData(); renderContactsPage(); }
         }
 
-        // --- World Book Logic ---
+        // --- World Book Logic (With Toggle) ---
         function renderWorldPage() {
             const container = document.getElementById('worldbook-list');
             container.innerHTML = "";
             user.worldBooks.forEach((wb, idx) => {
                 const div = document.createElement('div');
                 div.className = 'wb-item';
+                
+                const btnClass = (wb.isEnabled !== false) ? 'role-toggle-btn active' : 'role-toggle-btn inactive';
+
                 div.innerHTML = `
-                    <div class="wb-delete" onclick="deleteWorldBook(${idx})">✕</div>
+                    <div class="wb-header-row">
+                        <div style="display:flex; align-items:center;">
+                             <div class="${btnClass}" onclick="toggleWorldBook(${idx})" style="margin-right:10px;"></div>
+                             <span style="font-weight:bold; font-size:0.85rem; color:var(--text-primary);">条目 #${idx + 1}</span>
+                        </div>
+                        <div class="wb-delete" onclick="deleteWorldBook(${idx})">✕</div>
+                    </div>
                     <div class="sys-form-group" style="margin-bottom:0;">
-                        <label>世界观条目 #${idx + 1}</label>
                         <textarea class="sys-textarea" rows="3" placeholder="填写世界观详细，故事发生的背景等" onchange="updateWorldBook(${idx}, this.value)">${wb.content}</textarea>
                     </div>
                 `;
                 container.appendChild(div);
             });
         }
-        function addWorldBookItem() { user.worldBooks.push({ content: "" }); renderWorldPage(); }
+        function toggleWorldBook(idx) {
+            if(user.worldBooks[idx].isEnabled === undefined) user.worldBooks[idx].isEnabled = true;
+            user.worldBooks[idx].isEnabled = !user.worldBooks[idx].isEnabled;
+            renderWorldPage();
+        }
+        function addWorldBookItem() { user.worldBooks.push({ content: "", isEnabled: true }); renderWorldPage(); }
         function updateWorldBook(idx, val) { user.worldBooks[idx].content = val; }
         function deleteWorldBook(idx) { if(confirm("删除此条目？")) { user.worldBooks.splice(idx, 1); renderWorldPage(); } }
-        function saveWorldPage() { user.worldBooks = user.worldBooks.filter(w => w.content.trim() !== ""); saveAllData(); }
+        function saveWorldPage() { 
+            // Save logic remains, but we don't filter out empty ones instantly to avoid bad UX
+            user.worldBooks = user.worldBooks.filter(w => w.content.trim() !== ""); 
+            saveAllData(); 
+        }
 
         // --- API Logic ---
         function saveApiSettings() {
@@ -976,7 +1204,7 @@
             try {
                 const res = await fetch(url + '/models', { 
                     headers: { 'Authorization': `Bearer ${key}` },
-                    referrerPolicy: 'no-referrer' // 防止跨域拦截
+                    referrerPolicy: 'no-referrer' 
                 });
                 if(!res.ok) throw new Error("Fetch failed");
                 const data = await res.json();
@@ -1011,7 +1239,11 @@
 
         function getWorldContext() {
             if(!user.worldBooks || user.worldBooks.length === 0) return "";
-            const text = user.worldBooks.map(w => w.content).filter(t => t).join("\n");
+            // Only use Enabled entries
+            const text = user.worldBooks
+                .filter(w => w.isEnabled !== false)
+                .map(w => w.content)
+                .filter(t => t).join("\n");
             return `[WORLD SETTING / CURRENT EVENTS]:\n${text}`;
         }
         
@@ -1022,14 +1254,10 @@
         }
 
         async function generateMultiPosts() {
-            // 1. 获取所有已启用的角色
             const enabledRoles = roles.filter(r => r.isEnabled !== false);
-
             if(enabledRoles.length === 0) { alert("请先在通讯录启用至少一个角色"); return; }
             
             document.getElementById('loading').classList.remove('hidden');
-            
-            // 2. 随机选 1 个已启用的角色发帖
             const randomAuthor = enabledRoles[Math.floor(Math.random() * enabledRoles.length)];
             
             await generateAIPostWithChain(randomAuthor, enabledRoles);
@@ -1039,20 +1267,17 @@
             saveAllData();
         }
 
-        // --- 核心优化：防截断/智能选人模式 ---
         async function generateAIPostWithChain(authorRole, allEnabledRoles) {
             const worldInfo = getWorldContext();
             const now = new Date();
             const timeString = `${now.getHours()}:${now.getMinutes().toString().padStart(2,'0')}`;
             const fullDate = getDetailedDate();
             
-            // === 智能选人算法 ===
-            // 1. 识别“好朋友” (Relationship): 扫描作者Persona里出现的其他角色名
             let friends = [];
             let strangers = [];
 
             allEnabledRoles.forEach(r => {
-                if (r.id === authorRole.id) return; // 排除自己
+                if (r.id === authorRole.id) return;
                 if (authorRole.persona.includes(r.name)) {
                     friends.push(r);
                 } else {
@@ -1060,11 +1285,9 @@
                 }
             });
 
-            // 2. 随机打乱两组人
             friends.sort(() => Math.random() - 0.5);
             strangers.sort(() => Math.random() - 0.5);
 
-            // 3. 构建名单：优先填入朋友，剩下的位置给路人，总数控制在 4 人以内以节省 Token
             let selectedCommenters = [...friends];
             const remainingSlots = 4 - selectedCommenters.length;
             if (remainingSlots > 0) {
@@ -1087,7 +1310,6 @@
             ${worldInfo}
             Current User Info: ${user.name} (${user.id}) Persona: ${user.persona}
             [POTENTIAL COMMENTERS]
-            (These are characters currently online. Friends/Related people are prioritized)
             ${commentersInfo}
 
             [TASK]
@@ -1114,40 +1336,35 @@
             ]);
             if(!contentRaw) return;
 
-            console.log("AI Output:", contentRaw);
-
-            // --- 文本标记解析逻辑 ---
-            
-            // 1. 提取 Post
             let postContent = "...";
             const postParts = contentRaw.split("@@POST@@");
             if(postParts.length > 1) {
                 postContent = postParts[1].split("@@")[0].trim();
             }
 
-            // 2. 提取 Image Desc
             let imgDesc = "Image";
             const imgParts = contentRaw.split("@@IMG@@");
             if(imgParts.length > 1) {
                 imgDesc = imgParts[1].split("@@")[0].trim();
             }
 
-            // 3. 提取 Comments
             let extractedComments = [];
             const comParts = contentRaw.split("@@COM@@");
-            // 从索引 1 开始，因为索引 0 是 POST/IMG 部分
             for(let i=1; i<comParts.length; i++) {
                 let line = comParts[i].trim();
                 if(!line) continue;
                 
-                // 格式应该是: "@id 内容"
                 const firstSpaceIndex = line.indexOf(' ');
                 if(firstSpaceIndex !== -1) {
                     const idStr = line.substring(0, firstSpaceIndex).trim();
                     const textStr = line.substring(firstSpaceIndex).trim();
                     
-                    // 匹配角色 (在所有角色里匹配，防止AI幻觉)
-                    const commenter = roles.find(r => r.id === idStr || idStr.includes(r.id));
+                    // Fixed: Strict parsing first
+                    let commenter = roles.find(r => r.id === idStr);
+                    if (!commenter) {
+                         commenter = roles.find(r => idStr.startsWith(r.id)); // Fallback
+                    }
+
                     if(commenter) {
                         extractedComments.push({
                             commenter_id: commenter.id,
@@ -1157,7 +1374,6 @@
                 }
             }
 
-            // --- 构建数据并上屏 ---
             const newPost = {
                 uid: Date.now() + Math.random().toString(),
                 author: authorRole,
@@ -1172,7 +1388,6 @@
             posts.unshift(newPost);
             renderFeed();
 
-            // 异步延时添加评论
             if (extractedComments.length > 0) {
                 for (let c of extractedComments) {
                     const commenter = roles.find(r => r.id === c.commenter_id);
@@ -1197,7 +1412,6 @@
             await summonBatchCommentsForPost(post);
         }
 
-        // --- 核心优化：防截断的评论生成 ---
         async function summonBatchCommentsForPost(post) {
             generatingPostIds.add(post.uid);
             updateDetailStatus(post.uid);
@@ -1209,23 +1423,19 @@
             const userInfo = `User: ${user.name} (${user.id}), Persona: ${user.persona}`;
             const threadCtx = getThreadContext(post);
             
-            // === 智能选人逻辑 (Reply Mode) ===
             const enabledRoles = roles.filter(r => r.isEnabled !== false);
             
-            // 1. 找出已经在帖子里的角色 (保持连续性)
             const existingParticipantIds = new Set(post.comments.map(c => c.author.id));
-            existingParticipantIds.add(post.author.id); // 作者必在
+            existingParticipantIds.add(post.author.id);
 
             let activeRoles = enabledRoles.filter(r => existingParticipantIds.has(r.id));
             
-            // 2. 如果人数不足 4 人，拉“关系户”或者“路人”
             if (activeRoles.length < 4) {
                 const candidates = enabledRoles.filter(r => !existingParticipantIds.has(r.id));
                 
                 let friends = [];
                 let strangers = [];
                 
-                // 简单的关系判断：看名字是否在作者设定里出现
                 candidates.forEach(r => {
                     if (post.author.persona.includes(r.name)) friends.push(r);
                     else strangers.push(r);
@@ -1257,11 +1467,9 @@
             [THREAD HISTORY]
             ${threadCtx}
             [AVAILABLE ACTORS]
-            (Focus on characters already in thread or related to OP)
             ${availableRolesStr}
             [TASK]
             Decide how many characters (randomly 1 to 3) will comment now.
-            If it's a holiday or someone's birthday (check Personas), characters may mention it.
             
             [OUTPUT FORMAT - NO JSON]
             Output comments strictly using this separator:
@@ -1288,13 +1496,18 @@
                         const idStr = line.substring(0, firstSpaceIndex).trim();
                         let textStr = line.substring(firstSpaceIndex).trim();
                         
-                        // 查找角色 (包括 User 和 Roles)
-                        let roleObj = roles.find(r => r.id === idStr || idStr.includes(r.id));
+                        // --- 核心修复：更严格的角色匹配，防止张冠李戴 ---
+                        
+                        // 1. 尝试全匹配
+                        let roleObj = roles.find(r => r.id === idStr);
+                        // 2. 如果没找到，尝试匹配开头 (以防 AI 输出 @id: 或 @id )
+                        if (!roleObj) roleObj = roles.find(r => idStr.startsWith(r.id));
+
+                        // 3. 检查是否是 User 或 楼主
                         if(!roleObj && user.id === idStr) roleObj = user;
                         if(!roleObj && post.author.id === idStr) roleObj = post.author;
 
                         if(roleObj) {
-                            // 清理内容中的重复ID
                             if (textStr.startsWith(post.author.id)) {
                                  textStr = textStr.replace(post.author.id, "").trim();
                             }
@@ -1343,27 +1556,21 @@
             posts.unshift(newPost);
             renderFeed();
             saveAllData();
-            // User 发布帖子时，也一次性请求初始评论
             await summonBatchCommentsForPost(newPost);
         }
 
-        // --- 核心修改：回复/召唤逻辑 ---
         function openReplyModal() {
             const post = posts.find(p => p.uid === currentPostId);
             if(!post) return;
             const select = document.getElementById('reply-target-select');
             select.innerHTML = "";
             
-            // 楼主选项
             const opOption = document.createElement('option');
             opOption.value = post.author.id;
             opOption.innerText = `楼主: ${post.author.name}`;
             select.appendChild(opOption);
 
-            // 获取楼内已有的角色ID
             const inThreadIds = new Set(post.comments.map(c => c.author.id));
-            
-            // 只显示“已启用”的角色用于召唤
             const enabledRoles = roles.filter(r => r.isEnabled !== false);
 
             enabledRoles.forEach(r => {
@@ -1451,10 +1658,9 @@
             saveAllData();
         }
 
-        // 修改：上下文读取数量增加到 25 条
         function getThreadContext(post) {
             const header = `[Main Post by ${post.author.name} (${post.author.id})]: "${post.content}"\n[Image Context]: ${post.imageDesc || "None"}`;
-            const history = post.comments.slice(-25).map(c => `[Comment by ${c.author.name} (${c.author.id})]: "${c.content}"`).join("\n");
+            const history = post.comments.slice(-30).map(c => `[Comment by ${c.author.name} (${c.author.id})]: "${c.content}"`).join("\n");
             return `${header}\n${history || "[No comments yet]"}`;
         }
         
@@ -1470,50 +1676,34 @@
             el.innerText = generatingPostIds.has(uid) ? "AI 正在输入..." : "";
         }
         
-        // --- 核心修改：callAI 增强稳定性 ---
         async function callAI(messages) {
             if(!config.key) {
                 alert("未设置 API Key");
                 return null; 
             }
             try {
-                // 增加 max_tokens 防止回复截断导致 JSON 损坏
                 const res = await fetch(config.url + '/chat/completions', {
                     method: 'POST',
-                    // 关键修改：no-referrer 防止公益站拦截本地文件请求
                     referrerPolicy: 'no-referrer',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${config.key}` },
                     body: JSON.stringify({ 
                         model: config.model, 
                         messages: messages, 
-                        max_tokens: 3000, // 增加 Token 限制以容纳帖子+多条评论
+                        max_tokens: 3000, 
                         temperature: 0.9,
-                        stream: false // 保持非流式
+                        stream: false 
                     })
                 });
                 
                 if(!res.ok) {
-                    if (res.status === 401) throw new Error("API Key 无效或余额不足 (401)");
-                    if (res.status === 403) throw new Error("API 拒绝访问 (403) - 可能是跨域限制");
-                    if (res.status === 404) throw new Error("API 地址错误 (404)");
-                    if (res.status === 500) throw new Error("公益站服务器内部错误 (500)");
                     throw new Error("API Status: " + res.status);
                 }
                 
                 const data = await res.json();
-                if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-                    throw new Error("API 返回格式异常，没有 choices");
-                }
-                
                 return data.choices[0].message.content.trim();
 
             } catch(e) {
                 console.error("AI Error:", e);
-                if (e.message.includes("Failed to fetch")) {
-                    alert("网络错误：无法连接到 API。\n原因可能是：\n1. 跨域限制 (CORS)：该公益站不支持网页直连\n2. 地址填错了");
-                } else {
-                    console.log("生成轻微报错 (可忽略):" + e.message);
-                }
                 return null;
             }
         }
@@ -1604,7 +1794,7 @@
                             <span class="c-name">${c.author.name}</span>
                             <span class="c-id">${c.author.id}</span>
                         </div>
-                        <div style="display:flex; align-items:center;">
+                        <div class="c-right">
                             <span class="c-time">${c.time}</span>
                             <span class="action-dots" onclick="openActionMenu('comment', '${post.uid}', ${index})">···</span>
                         </div>
@@ -1625,7 +1815,6 @@
             document.getElementById('detail-heart-btn').classList.remove('active-icon');
         }
         
-        // --- Misc Actions ---
         function openUserPostModal() {
             document.getElementById('upost-text').value = "";
             document.getElementById('upost-img').value = "";
